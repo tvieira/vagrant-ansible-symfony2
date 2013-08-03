@@ -1,0 +1,17 @@
+---
+# Application Specific variables
+app_name: tutorial
+app_database: tutorial
+app_database_user: tutorialdbuser
+app_database_userpwd: tutorialdbuserpassword
+
+# Repository
+repo_url: https://github.com/tvieira/vagrant-ansible-symfony2.git
+repo_remote: origin
+repo_version: master
+
+# Kind of it can be automated?
+mysql_root_password: veryunsafepassword123
+
+# Symfony 2 secret key
+app_secret_key: ThisTokenIsNotSoSecretChangeIt

@@ -1,0 +1,69 @@
+---
+
+- hosts: webservers
+  user: vagrant
+  sudo: True
+
+  vars:
+    webapps_dir: /srv/webapps
+
+  vars_files:
+    - variables.yml
+
+  tasks:
+    - name: deploy code from repository
+      action: git repo=$repo_url dest=${webapps_dir}/${app_name} remote=$repo_remote version=$repo_version
+
+    - name: ensure log directory
+      action: file dest=${webapps_dir}/${app_name}/src/app/logs state=directory mode=0755 owner=www-data group=www-data
+
+    - name: ensure cache directory
+      action: file dest=${webapps_dir}/${app_name}/src/app/cache state=directory mode=0755 owner=www-data group=www-data
+
+    - name: symfony application config
+      template: src={{ item }} dest=${webapps_dir}/${app_name}/src/app/config/parameters.yml mode=0644 owner=root group=root
+      first_available_file:
+        - templates/symfony/parameters_prd.yml
+        - templates/symfony/parameters_stg.yml
+        - templates/symfony/parameters_dev.yml
+        - templates/symfony/parameters.yml
+
+    - name: update composer packages
+      action: command /usr/bin/composer update chdir=${webapps_dir}/${app_name}/src
+
+    - name: install nginx fastcgi_param
+      action: template src=templates/nginx/fastcgi_param dest=/etc/nginx/fastcgi_param
+      notify:
+        - restart nginx
+        - restart php-fpm
+
+    - name: copy nginx cert for ssl
+      action: template src=tutorial.crt dest=/etc/nginx/ssl/certs/${app_name}.crt
+
+    - name: copy nginx key for ssl
+      action: template src=tutorial.key dest=/etc/nginx/ssl/private/${app_name}.key
+
+    - name: create nginx site config
+      action: template src=templates/nginx/site.conf dest=/etc/nginx/sites-available/${app_name}.conf
+      notify:
+        - restart nginx
+        - restart php-fpm
+
+    - name: link nginx config
+      action: file src=/etc/nginx/sites-available/${app_name}.conf dest=/etc/nginx/sites-enabled/${app_name}.conf state=link
+      notify:
+        - restart nginx
+        - restart php-fpm
+
+    - name: remove app_dev restriction
+      action: template src=templates/symfony/app_dev.php dest=${webapps_dir}/${app_name}/src/web/app_dev.php
+
+    - name: ensure right dev permission
+      action: command /bin/chown -R www-data:www-data ${webapps_dir}/${app_name}/src/app/cache/dev
+
+  handlers:
+    - name: restart nginx
+      action: service name=nginx state=restarted
+
+    - name: restart php-fpm
+      action: service name=php5-fpm state=restarted

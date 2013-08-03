@@ -1,0 +1,98 @@
+---
+
+- hosts: webservers
+  user: vagrant
+  sudo: True
+
+  tasks:
+    - name: update apt
+      action: command /usr/bin/apt-get update
+
+    - name: install python-software-properties
+      action: apt pkg=python-software-properties state=present
+
+    - name: add nginx ppa
+      action: apt_repository repo=ppa:nginx/stable state=present
+
+    - name: add php ppa
+      action: apt_repository repo=ppa:ondrej/php5 state=present
+
+    - name: install web server packages
+      action: apt pkg=$item state=installed
+      with_items:
+        - build-essential
+        - libpq-dev
+        - libmysqlclient-dev
+        - libxml2-dev
+        - libjpeg62
+        - libjpeg62-dev
+        - libfreetype6
+        - libfreetype6-dev
+        - zlib1g-dev
+        - mysql-client
+        - imagemagick
+        - git
+        - nodejs
+        - npm
+        - nginx
+        - curl
+        - memcached
+
+    - name: install php packages
+      action: apt pkg=$item state=installed
+      with_items:
+        - php-pear
+        - php-apc
+        - php5-fpm
+        - php5-cli
+        - php5-dev
+        - php5-gd
+        - php5-curl
+        - php5-mcrypt
+        - php5-xdebug
+        - php5-sqlite
+        - php5-mysql
+        - php5-memcache
+        - php5-intl
+        - php5-tidy
+        - php5-imap
+        - php5-imagick
+
+    - name: install mongo.so
+      action: command pecl install --force mongo
+
+    - name: download composer
+      action: command /usr/bin/curl -s http://getcomposer.org/installer -o /tmp/composer_installer
+
+    - name: install composer
+      action: command /usr/bin/php /tmp/composer_installer --install-dir=/usr/bin
+
+    - name: move composer.phar to composer
+      action: command mv /usr/bin/composer.phar /usr/bin/composer
+
+    - name: remove default nginx site
+      action: file path=/etc/nginx/sites-enabled/default state=absent
+
+    - name: write nginx.conf
+      action: template src=templates/nginx/nginx.conf dest=/etc/nginx/nginx.conf
+
+    - name: set nginx ssl certs folder
+      action: file dest=/etc/nginx/ssl/certs state=directory
+
+    - name: set nginx ssl key folder
+      action: file dest=/etc/nginx/ssl/private state=directory
+
+    - name: write cli php.ini
+      action: template src=templates/php/cli/php.ini dest=/etc/php5/cli/php.ini
+
+    - name: write php/fpm/php.ini
+      action: template src=templates/php/fpm/php.ini dest=/etc/php5/fpm/php.ini
+
+    - name: write php/fpm/fpm-php.ini
+      action: template src=templates/php/fpm/php-fpm.conf dest=/etc/php5/fpm/php-fpm.conf
+
+    - name: write php/fpm/pool.d/www.conf
+      action: template src=templates/php/fpm/pool.d/www.conf dest=/etc/php5/fpm/pool.d/www.conf
+
+    - name: create webapps directory
+      action: file dest=/srv/webapps state=directory

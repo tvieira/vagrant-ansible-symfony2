@@ -1,0 +1,13 @@
+parameters:
+    database_driver: pdo_mysql
+    database_host: 192.168.100.20
+    database_port: null
+    database_name: {{ app_database }}
+    database_user: {{ app_database_user }}
+    database_password: {{ app_database_userpwd }}
+    mailer_transport: smtp
+    mailer_host: 127.0.0.1
+    mailer_user: null
+    mailer_password: null
+    locale: en
+    secret: {{ app_secret_key }}

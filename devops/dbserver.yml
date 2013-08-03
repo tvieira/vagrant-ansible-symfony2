@@ -1,0 +1,58 @@
+---
+
+- hosts: dbservers
+  sudo: True
+  user: vagrant
+
+  vars:
+    app_webserver_ip: 192.168.100.10
+
+  vars_files:
+    - variables.yml
+
+  tasks:
+    - name: update apt
+      action: command /usr/bin/apt-get update
+
+    - name: update sudoers
+      action: copy src=templates/sudoers dest=/etc/sudoers
+
+    - name: install db server packages
+      action: apt pkg=$item state=present
+      with_items:
+        - mysql-server
+        - python-dev
+        - python-setuptools
+        - python-mysqldb
+
+    - name: install python libraries
+      action: easy_install name=ConfigParser
+
+    - name: update mysql db configuration
+      action: template src=templates/mysql/my.cnf dest=/etc/mysql/my.cnf owner=root mode=0600
+      notify:
+        - restart mysql
+
+    # I have to ignore errors - after creation, vagrant will complain on reloading as root is already set
+    - name: update mysql root password for all root accounts
+      action: mysql_user name=root host=$item password=$mysql_root_password
+      with_items:
+        - $ansible_hostname
+        - 127.0.0.1
+        - ::1
+        - localhost
+      ignore_errors: yes
+
+    # I have to ignore errors - after creation, vagrant will complain on reloading as db is already set
+    - name: create database for app
+      action: mysql_db login_user=root login_password=$mysql_root_password name=$app_database state=present
+      ignore_errors: yes
+
+    # I have to ignore errors - after creation, vagrant will complain on reloading as user is already set
+    - name: update mysql user password for app
+      action: mysql_user login_user=root login_password=$mysql_root_password name=$app_database_user host=$app_webserver_ip password=$app_database_userpwd priv=$app_database.*:ALL
+      ignore_errors: yes
+
+  handlers:
+    - name: restart mysql
+      action: service name=mysql state=restarted

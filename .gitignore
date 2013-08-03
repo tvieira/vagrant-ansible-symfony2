@@ -4,5 +4,7 @@
 /src/app/logs/*
 /src/vendor/
 /src/app/config/parameters.yml
+/devops/templates/parameters_prd.yml
+/devops/templates/parameters_stg.yml
 /devops/templates/parameters_dev.yml
 .vagrant/
