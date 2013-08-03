@@ -1,0 +1,8 @@
+/src/web/bundles/
+/src/app/bootstrap*
+/src/app/cache/*
+/src/app/logs/*
+/src/vendor/
+/src/app/config/parameters.yml
+/devops/templates/parameters_dev.yml
+.vagrant/
