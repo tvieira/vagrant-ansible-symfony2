@@ -65,10 +65,7 @@
       action: command /usr/bin/curl -s http://getcomposer.org/installer -o /tmp/composer_installer
 
     - name: install composer
-      action: command /usr/bin/php /tmp/composer_installer --install-dir=/usr/bin
-
-    - name: move composer.phar to composer
-      action: command mv /usr/bin/composer.phar /usr/bin/composer
+      action: command /usr/bin/php /tmp/composer_installer --install-dir=/usr/bin --filename=composer
 
     - name: remove default nginx site
       action: file path=/etc/nginx/sites-enabled/default state=absent
