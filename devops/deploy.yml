@@ -29,7 +29,7 @@
         - templates/symfony/parameters.yml
 
     - name: update composer packages
-      action: command /usr/bin/composer update chdir=${webapps_dir}/${app_name}/src
+      action: command /usr/bin/composer install --no-dev -qn chdir=${webapps_dir}/${app_name}/src
 
     - name: install nginx fastcgi_param
       action: template src=templates/nginx/fastcgi_param dest=/etc/nginx/fastcgi_param
